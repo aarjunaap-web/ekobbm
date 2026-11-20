@@ -1,0 +1,98 @@
+{% extends "prediksi/base.html" %}
+
+{% block judul %}Beranda{% endblock %}
+
+{% block isi %}
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="badge lencana mb-3"><i class="bi bi-stars me-1"></i>Machine Learning + Django</span>
+                <h1 class="display-5 fw-bold mb-3">Perkirakan efisiensi BBM mobil dari spesifikasinya</h1>
+                <p class="lead mb-4">
+                    Masukkan jumlah silinder, kapasitas mesin, tenaga, berat, dan tahun pembuatan.
+                    Model Random Forest memperkirakan berapa kilometer yang bisa ditempuh per liter bensin.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'prediksi' %}" class="btn btn-aksen btn-lg"><i class="bi bi-speedometer2 me-2"></i>Coba prediksi</a>
+                    <a href="#cara-kerja" class="btn btn-outline-light btn-lg">Lihat cara kerja</a>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="kartu-contoh">
+                    <div class="small text-uppercase fw-semibold opacity-75">Contoh tampilan hasil</div>
+                    <div class="angka-besar">11,8 <span>km/L</span></div>
+                    <div class="mb-3"><span class="badge text-bg-success">Irit</span></div>
+                    <ul class="list-unstyled small mb-0 opacity-75">
+                        <li><i class="bi bi-gear me-2"></i>4 silinder &middot; 1.600 cc</li>
+                        <li><i class="bi bi-lightning-charge me-2"></i>90 hp</li>
+                        <li><i class="bi bi-box-seam me-2"></i>1.000 kg</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container statistik">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="kartu h-100">
+                <div class="ikon"><i class="bi bi-database"></i></div>
+                <div class="nilai">{{ jumlah_data }}</div>
+                <div class="label">mobil dalam dataset Auto MPG</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kartu h-100">
+                <div class="ikon"><i class="bi bi-bullseye"></i></div>
+                <div class="nilai">{{ r2_uji|floatformat:2 }}</div>
+                <div class="label">R&sup2; model pada data uji (regresi linear: {{ r2_linear|floatformat:2 }})</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kartu h-100">
+                <div class="ikon"><i class="bi bi-rulers"></i></div>
+                <div class="nilai">&plusmn;{{ mae_uji|floatformat:2 }}</div>
+                <div class="label">km/L rata-rata selisih prediksi dan data asli</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container py-5" id="cara-kerja">
+    <h2 class="fw-bold text-center mb-1">Bagaimana cara kerjanya?</h2>
+    <p class="text-center text-muted mb-5">Tiga langkah dari data mentah sampai halaman web ini.</p>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="langkah">
+                <span class="nomor">1</span>
+                <h5>Belajar dari data</h5>
+                <p>Model dilatih dengan {{ jumlah_data }} mobil tahun {{ tahun_awal }}&ndash;{{ tahun_akhir }}. Satuan dataset diubah menjadi cc, kg, dan km/L.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="langkah">
+                <span class="nomor">2</span>
+                <h5>Disimpan dengan joblib</h5>
+                <p>Hasil belajar dibekukan ke satu file, sehingga website tidak perlu melatih ulang setiap kali dibuka.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="langkah">
+                <span class="nomor">3</span>
+                <h5>Dipakai lewat Django</h5>
+                <p>Django menerima input dari formulir, memanggil model, lalu menampilkan hasilnya beserta penjelasan.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container">
+    <div class="catatan">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>Catatan:</strong> dataset berisi mobil tahun {{ tahun_awal }}&ndash;{{ tahun_akhir }}, jadi hasilnya adalah
+        estimasi untuk spesifikasi serupa, bukan angka resmi mobil terbaru.
+    </div>
+</section>
+{% endblock %}
