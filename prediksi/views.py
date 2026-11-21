@@ -7,7 +7,7 @@ from django.shortcuts import render
 
 from .forms import FormHitung
 from .layanan import (angka_resmi, daftar_model, daftar_tahun, daftar_varian, muat_model, muat_ringkasan)
-from .penjelas import NAMA_FITUR, _kecil, penjelasan_wawasan
+from .penjelas import NAMA_FITUR, _kecil, penjelasan_grafik
 
 def _rupiah(angka):
     return "Rp" + f"{angka:,.0f}".replace(",", ".")
@@ -142,8 +142,8 @@ def wawasan(request):
 
 
 def wawasan_penjelasan(request):
-    """Dipanggil JavaScript saat halaman Wawasan dibuka; mengembalikan ringkasan sebagai JSON."""
-    sumber, teks = penjelasan_wawasan()
+    """Dipanggil JavaScript saat halaman Wawasan dibuka; mengembalikan penjelasan tiap grafik sebagai JSON."""
+    sumber, teks = penjelasan_grafik()
     return JsonResponse({"sumber": sumber, "teks": teks})
 
 # ---------- halaman Tentang ----------

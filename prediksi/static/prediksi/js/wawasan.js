@@ -60,22 +60,20 @@ batangMendatar("gKelas", data.kelas.label, data.kelas.nilai, data.kelas.nilai.ma
 batangMendatar("gMerek", data.merek.label, data.merek.nilai, data.merek.nilai.map(warna), "km per liter");
 batangMendatar("gFaktor", data.faktor.label, data.faktor.nilai, HIJAU, "Pengaruh (%)");
 
-// ringkasan: diminta ke server (yang menghubungi Groq), lalu ditampilkan sebagai daftar poin
-const kotak = document.getElementById("hasilRingkasan");
-const lencana = document.getElementById("sumberRingkasan");
+// penjelasan tiap grafik: diminta ke server (yang menghubungi Groq), lalu dimasukkan ke kotak "Artinya"
+const wadah = document.getElementById("penjelasan");
+const lencana = document.getElementById("sumberPenjelasan");
 
-fetch(kotak.dataset.url)
+fetch(wadah.dataset.url)
     .then(r => r.json())
     .then(hasil => {
-        const daftar = document.createElement("ul");
-        hasil.teks.split("\n").filter(b => b.trim()).forEach(baris => {
-            const li = document.createElement("li");
-            li.textContent = baris.replace(/^[-*•]\s*/, "");   // textContent: aman dari HTML
-            daftar.appendChild(li);
+        document.querySelectorAll(".artinya").forEach(kotak => {
+            const teks = hasil.teks[kotak.dataset.kunci];
+            if (teks) kotak.querySelector(".artinya-isi").textContent = teks;   // textContent: aman dari HTML
         });
-        kotak.innerHTML = "";
-        kotak.appendChild(daftar);
-        lencana.textContent = hasil.sumber === "ai" ? "Ditulis oleh AI (Llama via Groq)" : "Ringkasan otomatis dari data";
+        lencana.textContent = hasil.sumber === "ai" ? "Penjelasan ditulis oleh AI (Llama via Groq)" : "Penjelasan otomatis dari data";
         lencana.classList.remove("d-none");
     })
-    .catch(() => { kotak.textContent = "Ringkasan belum bisa ditampilkan."; });
+    .catch(() => {
+        document.querySelectorAll(".artinya-isi").forEach(k => { k.textContent = "Penjelasan belum bisa ditampilkan."; });
+    });
