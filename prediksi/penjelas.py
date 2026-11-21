@@ -1,4 +1,7 @@
-"""Meminta Groq menjelaskan grafik. Kunci API dibaca dari environment variable, tidak pernah ditulis di kode."""
+"""Ringkasan grafik untuk halaman Wawasan. Dibuat oleh Groq (LLM); bila tidak tersedia, dipakai ringkasan otomatis dari data.
+
+Kunci API dibaca dari environment variable GROQ_API_KEY dan tidak pernah ditulis di kode.
+"""
 import json
 import os
 import urllib.error
@@ -10,8 +13,70 @@ URL = "https://api.groq.com/openai/v1/chat/completions"
 URL_MODEL = "https://api.groq.com/openai/v1/models"
 UTAMA = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "llama-3.1-8b-instant", "openai/gpt-oss-20b"]
 BUKAN_CHAT = ("whisper", "guard", "tts", "orpheus", "playai", "embed")
-NAMA = {"silinder": "jumlah silinder", "mesin_cc": "kapasitas mesin", "tenaga_hp": "tenaga",
-        "berat_kg": "berat", "akselerasi_detik": "akselerasi", "tahun": "tahun pembuatan"}
+
+NAMA_FITUR = {
+    "merek": "merek", "model": "model", "kelas": "jenis mobil", "transmisi": "transmisi", "penggerak": "penggerak roda",
+    "turbo": "turbo", "hybrid": "hybrid", "diesel": "mesin diesel", "tahun": "tahun pembuatan",
+    "silinder": "jumlah silinder", "mesin_liter": "ukuran mesin",
+}
+
+
+def _koma(angka):
+    return f"{angka:.1f}".replace(".", ",")
+
+
+def _kecil(teks):
+    """Huruf kecil, tetapi MPV tetap kapital."""
+    return teks.lower().replace("mpv", "MPV")
+
+
+def _fakta():
+    """Angka-angka penting dari data, dipakai untuk prompt LLM dan untuk ringkasan otomatis."""
+    r = muat_ringkasan()
+    silinder = dict(zip(r["per_silinder"]["label"], r["per_silinder"]["kml"]))
+    urut = sorted(r["pentingnya_fitur"].items(), key=lambda p: -p[1])
+    return {
+        "jumlah": r["jumlah_data"], "merek": r["jumlah_merek"],
+        "tahun_awal": r["rentang"]["tahun"][0], "tahun_akhir": r["rentang"]["tahun"][1],
+        "median": r["kml_median"],
+        "silinder_4": silinder[4], "silinder_8": silinder[8],
+        "kml_awal": r["per_tahun"]["kml"][0], "kml_akhir": r["per_tahun"]["kml"][-1],
+        "kelas_irit": r["per_kelas"]["label"][0], "kelas_irit_kml": r["per_kelas"]["kml"][0],
+        "kelas_boros": r["per_kelas"]["label"][-1], "kelas_boros_kml": r["per_kelas"]["kml"][-1],
+        "penting": [(NAMA_FITUR[k], round(v * 100)) for k, v in urut[:4]],
+    }
+
+
+def ringkasan_otomatis():
+    """Ringkasan tanpa AI, disusun langsung dari angka (dipakai bila Groq tidak tersedia)."""
+    f = _fakta()
+    return "\n".join([
+        f"- Ukuran mesin adalah faktor yang paling menentukan ({f['penting'][0][1]}% pengaruh): mesin lebih besar umumnya lebih boros.",
+        f"- Mobil 4 silinder rata-rata {_koma(f['silinder_4'])} km/L, sedangkan 8 silinder hanya {_koma(f['silinder_8'])} km/L.",
+        f"- Dari {f['tahun_awal']} sampai {f['tahun_akhir']}, rata-rata efisiensi naik dari {_koma(f['kml_awal'])} menjadi {_koma(f['kml_akhir'])} km/L.",
+        f"- Jenis mobil paling irit adalah {_kecil(f['kelas_irit'])} ({_koma(f['kelas_irit_kml'])} km/L), paling boros {_kecil(f['kelas_boros'])} ({_koma(f['kelas_boros_kml'])} km/L).",
+    ])
+
+
+def _prompt():
+    f = _fakta()
+    data = (
+        f"Data: {f['jumlah']} varian mobil dari {f['merek']} merek, tahun {f['tahun_awal']}-{f['tahun_akhir']}; "
+        f"nilai tengah konsumsi {_koma(f['median'])} km/L.\n"
+        f"Rata-rata km/L: mobil 4 silinder {_koma(f['silinder_4'])}, mobil 8 silinder {_koma(f['silinder_8'])}.\n"
+        f"Rata-rata km/L menurut tahun: {f['tahun_awal']} = {_koma(f['kml_awal'])}, {f['tahun_akhir']} = {_koma(f['kml_akhir'])}.\n"
+        f"Jenis mobil paling irit: {f['kelas_irit']} ({_koma(f['kelas_irit_kml'])} km/L); paling boros: {f['kelas_boros']} ({_koma(f['kelas_boros_kml'])} km/L).\n"
+        "Faktor paling berpengaruh pada model prediksi: " + ", ".join(f"{n} {p}%" for n, p in f["penting"]) + "."
+    )
+    return (
+        "Kamu menjelaskan grafik pada website cek konsumsi BBM mobil kepada pengunjung awam. "
+        "Gunakan HANYA angka pada data di bawah dan jangan menambah angka lain. "
+        "Tulis dalam bahasa Indonesia yang sederhana tanpa istilah teknis, tepat 4 poin, tiap poin satu atau dua kalimat, "
+        "diawali tanda '- ' dan tanpa format markdown lain. "
+        "Poin: (1) hubungan ukuran mesin/jumlah silinder dengan konsumsi, (2) perbandingan 4 dan 8 silinder, "
+        "(3) tren dari tahun ke tahun, (4) jenis mobil paling irit dan boros, ditutup satu kalimat bahwa faktor-faktor ini saling berkaitan "
+        "dan data berasal dari uji EPA di Amerika Serikat.\n\nDATA:\n" + data
+    )
 
 
 def _header(kunci):
@@ -19,77 +84,38 @@ def _header(kunci):
 
 
 def _model_chat(kunci):
-    """Menanyakan ke Groq model apa saja yang boleh dipakai oleh akun ini, lalu mengurutkan yang disukai di depan."""
-    permintaan = urllib.request.Request(URL_MODEL, headers=_header(kunci))
-    with urllib.request.urlopen(permintaan, timeout=20) as jawaban:
+    """Menanyakan ke Groq model apa yang boleh dipakai akun ini, lalu mengurutkan yang disukai di depan."""
+    with urllib.request.urlopen(urllib.request.Request(URL_MODEL, headers=_header(kunci)), timeout=20) as jawaban:
         ada = [m["id"] for m in json.loads(jawaban.read().decode("utf-8"))["data"]]
     ada = [m for m in ada if not any(k in m for k in BUKAN_CHAT)]
     return [m for m in UTAMA if m in ada] + [m for m in ada if m not in UTAMA]
 
 
-def _susun_data():
-    """Mengubah ringkasan hasil analisis menjadi teks pendek untuk dibaca LLM."""
-    r = muat_ringkasan()
-    baris = [
-        f"Data: {r['jumlah_data']} mobil tahun {int(r['rentang']['tahun'][0])}-{int(r['rentang']['tahun'][1])}.",
-        "Rata-rata km/L menurut jumlah silinder: "
-        + ", ".join(f"{k} silinder = {v}" for k, v in r["per_silinder"].items()) + ".",
-        "Rata-rata km/L menurut tahun: " + ", ".join(f"{k} = {v}" for k, v in r["per_tahun"].items()) + ".",
-        "Pengaruh fitur menurut Random Forest: "
-        + ", ".join(f"{NAMA[k]} = {round(v * 100, 1)}%" for k, v in sorted(r["pentingnya_fitur"].items(), key=lambda p: -p[1])) + ".",
-        f"Rentang berat mobil {int(r['rentang']['berat_kg'][0])}-{int(r['rentang']['berat_kg'][1])} kg; "
-        "pada grafik sebaran, makin berat mobil makin kecil km/L.",
-    ]
-    return "\n".join(baris)
-
-
-def _prompt():
-    return (
-        "Kamu menjelaskan grafik pada website prediksi efisiensi BBM mobil kepada pengunjung awam. "
-        "Gunakan HANYA angka pada data di bawah, jangan menambah angka lain. "
-        "Tulis dalam bahasa Indonesia yang sederhana, tepat 4 poin, tiap poin satu kalimat atau dua kalimat, "
-        "diawali tanda '- ' dan tanpa format markdown lain. "
-        "Poin: (1) hubungan berat dengan km/L, (2) perbandingan jumlah silinder, (3) tren menurut tahun, "
-        "(4) fitur paling berpengaruh dan satu catatan bahwa fitur saling berkaitan.\n\n"
-        "DATA:\n" + _susun_data()
-    )
-
-
 _cache = {}
 
 
-def penjelasan_grafik():
-    """Mengembalikan (berhasil, teks). Hasil sukses disimpan agar tidak memanggil API berulang."""
+def penjelasan_wawasan():
+    """Mengembalikan (sumber, teks). sumber = 'ai' bila dari Groq, 'otomatis' bila memakai ringkasan cadangan."""
     if "teks" in _cache:
-        return True, _cache["teks"]
+        return "ai", _cache["teks"]
 
     kunci = os.environ.get("GROQ_API_KEY")
     if not kunci:
-        return False, "Kunci GROQ_API_KEY belum diatur di komputer ini, sehingga penjelasan otomatis belum bisa dibuat."
-
-    galat_terakhir = ""
+        return "otomatis", ringkasan_otomatis()
     try:
-        daftar_model = _model_chat(kunci)
-    except urllib.error.HTTPError as e:
-        return False, f"Kunci ditolak atau tidak bisa dipakai (HTTP {e.code}). Periksa kembali GROQ_API_KEY."
-    except Exception as e:
-        return False, f"Tidak bisa menghubungi Groq ({type(e).__name__}). Periksa koneksi internet."
+        daftar = _model_chat(kunci)
+    except Exception:
+        return "otomatis", ringkasan_otomatis()
 
-    for model in daftar_model[:4]:
-        isi = json.dumps({
-            "model": model,
-            "messages": [{"role": "user", "content": _prompt()}],
-            "temperature": 0.3,
-        }).encode("utf-8")
+    for model in daftar[:4]:
+        isi = json.dumps({"model": model, "messages": [{"role": "user", "content": _prompt()}], "temperature": 0.3}).encode("utf-8")
         permintaan = urllib.request.Request(URL, data=isi, method="POST", headers=_header(kunci))
         try:
             with urllib.request.urlopen(permintaan, timeout=30) as jawaban:
                 teks = json.loads(jawaban.read().decode("utf-8"))["choices"][0]["message"]["content"].strip()
-            _cache["teks"] = teks
-            return True, teks
-        except urllib.error.HTTPError as e:
-            pesan = e.read().decode("utf-8", "ignore")[:150]
-            galat_terakhir = f"{model}: HTTP {e.code} {pesan}"
-        except Exception as e:  # jaringan putus, waktu habis, dan sebagainya
-            galat_terakhir = f"{model}: {type(e).__name__}"
-    return False, f"Penjelasan otomatis gagal dibuat ({galat_terakhir})."
+            if teks:
+                _cache["teks"] = teks
+                return "ai", teks
+        except Exception:
+            continue
+    return "otomatis", ringkasan_otomatis()

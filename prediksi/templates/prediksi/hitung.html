@@ -1,0 +1,119 @@
+{% extends "prediksi/base.html" %}
+
+{% block judul %}Hitung konsumsi BBM{% endblock %}
+
+{% block isi %}
+<section class="judul-halaman">
+    <div class="container">
+        <h1 class="fw-bold mb-1">Hitung konsumsi BBM</h1>
+        <p class="mb-0 opacity-75">Pilih mobil, cek spesifikasinya, lalu isi pemakaianmu.</p>
+    </div>
+</section>
+
+<section class="container isi-halaman">
+    <form method="post" id="formHitung" novalidate
+          data-url-model="{% url 'api_model' %}" data-url-tahun="{% url 'api_tahun' %}" data-url-varian="{% url 'api_varian' %}">
+        {% csrf_token %}
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="kartu mb-4">
+                    <h5 class="fw-bold mb-3"><span class="nomor">1</span>Pilih mobil</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.merek.id_for_label }}" class="form-label fw-semibold">{{ form.merek.label }}</label>
+                            {{ form.merek }}
+                            {% for g in form.merek.errors %}<div class="text-danger small">{{ g }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-5">
+                            <label for="{{ form.model.id_for_label }}" class="form-label fw-semibold">{{ form.model.label }}</label>
+                            {{ form.model }}
+                            {% for g in form.model.errors %}<div class="text-danger small">{{ g }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.tahun.id_for_label }}" class="form-label fw-semibold">{{ form.tahun.label }}</label>
+                            {{ form.tahun }}
+                            {% for g in form.tahun.errors %}<div class="text-danger small">{{ g }}</div>{% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <label for="varian" class="form-label fw-semibold">Varian mesin</label>
+                            <select id="varian" class="form-select" disabled><option>Pilih tahun dulu</option></select>
+                            <div class="form-text">Memilih varian akan mengisi spesifikasi di bawah secara otomatis.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kartu mb-4">
+                    <h5 class="fw-bold mb-1"><span class="nomor">2</span>Spesifikasi</h5>
+                    <p class="text-muted small mb-3">Terisi otomatis dari varian yang dipilih. Boleh diubah untuk mencoba mobil lain.</p>
+                    <div class="row g-3">
+                        {% include "prediksi/_kolom.html" with f=form.kelas lebar="col-md-6" %}
+                        {% include "prediksi/_kolom.html" with f=form.mesin_liter lebar="col-md-6" %}
+                        {% include "prediksi/_kolom.html" with f=form.silinder lebar="col-md-6" %}
+                        {% include "prediksi/_kolom.html" with f=form.transmisi lebar="col-md-6" %}
+                        {% include "prediksi/_kolom.html" with f=form.penggerak lebar="col-md-6" %}
+                        {% include "prediksi/_kolom.html" with f=form.turbo lebar="col-md-2 col-4" %}
+                        {% include "prediksi/_kolom.html" with f=form.hybrid lebar="col-md-2 col-4" %}
+                        {% include "prediksi/_kolom.html" with f=form.diesel lebar="col-md-2 col-4" %}
+                    </div>
+                </div>
+
+                <div class="kartu">
+                    <h5 class="fw-bold mb-3"><span class="nomor">3</span>Pemakaianmu</h5>
+                    <div class="row g-3">
+                        {% include "prediksi/_kolom.html" with f=form.jarak_bulan lebar="col-md-6" %}
+                        {% include "prediksi/_kolom.html" with f=form.harga_bbm lebar="col-md-6" %}
+                    </div>
+                    <button type="submit" class="btn btn-hijau btn-lg w-100 mt-4"><i class="bi bi-calculator me-2"></i>Hitung konsumsi</button>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="kolom-hasil">
+                {% if hasil %}
+                    <div class="kartu">
+                        <div class="small text-uppercase fw-semibold text-muted">{{ hasil.nama }}</div>
+                        <div class="hasil-angka">{{ hasil.kml }} <span>km/L</span></div>
+                        <span class="badge text-bg-{{ hasil.warna }} fs-6 mb-3">{{ hasil.kategori }}</span>
+
+                        <div class="skala"><div class="penanda" style="left: {{ hasil.peringkat }}%"></div></div>
+                        <div class="d-flex justify-content-between small text-muted mb-2"><span>Boros</span><span>Irit</span></div>
+                        <p class="mb-4">Lebih irit dari <strong>{{ hasil.lebih_irit_dari }}%</strong> mobil dalam data.</p>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6"><div class="mini"><div class="mini-nilai">{{ hasil.biaya_100 }}</div><div class="mini-label">biaya per 100 km ({{ hasil.liter_100 }} liter)</div></div></div>
+                            <div class="col-6"><div class="mini"><div class="mini-nilai">{{ hasil.biaya_bulan }}</div><div class="mini-label">per bulan, {{ hasil.jarak_bulan }} km ({{ hasil.liter_bulan }} liter)</div></div></div>
+                        </div>
+
+                        <div class="small text-muted mb-3">Kisaran wajar: {{ hasil.kisaran }} km/L. Dalam uji kami, 80% perkiraan meleset kurang dari {{ hasil.persen_selisih }}%.</div>
+
+                        {% if hasil.resmi %}
+                        <div class="alert alert-success small mb-0">
+                            <i class="bi bi-patch-check-fill me-1"></i>
+                            <strong>Angka resmi EPA untuk spesifikasi ini:</strong> {{ hasil.resmi.kml }} km/L
+                            (kota {{ hasil.resmi.kota }}, jalan tol {{ hasil.resmi.tol }}).
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info small mb-0">
+                            <i class="bi bi-lightbulb-fill me-1"></i>
+                            Spesifikasi ini berbeda dari data resmi, jadi hasilnya berupa simulasi dari model.
+                        </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="kartu kosong text-center">
+                        <i class="bi bi-speedometer2"></i>
+                        <h5 class="fw-bold mt-3">Hasil akan muncul di sini</h5>
+                        <p class="text-muted mb-0">Pilih mobil di sebelah kiri, lalu klik <strong>Hitung konsumsi</strong>.</p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+{% block skrip %}
+{% load static %}
+<script src="{% static 'prediksi/js/hitung.js' %}"></script>
+{% endblock %}

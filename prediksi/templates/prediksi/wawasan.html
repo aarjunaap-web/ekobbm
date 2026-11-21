@@ -1,0 +1,77 @@
+{% extends "prediksi/base.html" %}
+
+{% block judul %}Wawasan{% endblock %}
+
+{% block isi %}
+<section class="judul-halaman">
+    <div class="container">
+        <h1 class="fw-bold mb-1">Wawasan dari data</h1>
+        <p class="mb-0 opacity-75">Pola konsumsi BBM dari {{ jumlah_data }} varian mobil.</p>
+    </div>
+</section>
+
+<section class="container isi-halaman">
+    <div class="kartu mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-stars me-2"></i>Ringkasan</h5>
+            <span id="sumberRingkasan" class="lencana-sumber d-none"></span>
+        </div>
+        <div id="hasilRingkasan" class="penjelasan" data-url="{% url 'wawasan_penjelasan' %}">
+            <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton pendek"></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="kartu h-100">
+                <h5 class="fw-bold">Makin besar mesin, makin boros</h5>
+                <p class="text-muted small">Setiap titik satu varian mobil (600 contoh acak). Hijau irit, kuning sedang, merah boros.</p>
+                <div class="area-grafik"><canvas id="gSebaran"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="kartu h-100">
+                <h5 class="fw-bold">{{ judul_silinder }}</h5>
+                <p class="text-muted small">Rata-rata km per liter menurut jumlah silinder.</p>
+                <div class="area-grafik"><canvas id="gSilinder"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="kartu h-100">
+                <h5 class="fw-bold">{{ judul_tahun }}</h5>
+                <p class="text-muted small">Rata-rata km per liter menurut tahun pembuatan.</p>
+                <div class="area-grafik"><canvas id="gTahun"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="kartu h-100">
+                <h5 class="fw-bold">{{ judul_kelas }}</h5>
+                <p class="text-muted small">Rata-rata km per liter menurut jenis mobil.</p>
+                <div class="area-grafik tinggi"><canvas id="gKelas"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="kartu h-100">
+                <h5 class="fw-bold">{{ judul_merek }}</h5>
+                <p class="text-muted small">Nilai tengah km per liter, untuk merek dengan data cukup banyak. Hasilnya dipengaruhi jenis mobil yang dijual tiap merek.</p>
+                <div class="area-grafik tinggi"><canvas id="gMerek"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="kartu h-100">
+                <h5 class="fw-bold">{{ judul_faktor }}</h5>
+                <p class="text-muted small">Seberapa besar tiap hal memengaruhi tebakan model. Ini ukuran pengaruh, bukan bukti sebab-akibat.</p>
+                <div class="area-grafik tinggi"><canvas id="gFaktor"></canvas></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{ data_grafik|json_script:"data-grafik" }}
+{% endblock %}
+
+{% block skrip %}
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'prediksi/js/wawasan.js' %}"></script>
+{% endblock %}
