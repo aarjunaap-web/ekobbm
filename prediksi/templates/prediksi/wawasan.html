@@ -6,62 +6,81 @@
 <section class="judul-halaman">
     <div class="container">
         <h1 class="fw-bold mb-1">Wawasan dari data</h1>
-        <p class="mb-0 opacity-75">Pola konsumsi BBM dari {{ jumlah_data }} varian mobil.</p>
+        <p class="mb-0 opacity-75">Pola konsumsi BBM dari {{ jumlah_data }} varian mobil. Tiap grafik disertai cara membacanya dan artinya.</p>
     </div>
 </section>
 
 <section class="container isi-halaman">
-    <div class="kartu mb-4">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <h5 class="fw-bold mb-0"><i class="bi bi-stars me-2"></i>Ringkasan</h5>
-            <span id="sumberRingkasan" class="lencana-sumber d-none"></span>
-        </div>
-        <div id="hasilRingkasan" class="penjelasan" data-url="{% url 'wawasan_penjelasan' %}">
-            <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton pendek"></div>
-        </div>
+        <div class="kartu py-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-2" id="penjelasan" data-url="{% url 'wawasan_penjelasan' %}">
+        <p class="text-muted small mb-0">Satuan di semua grafik: km per liter. <strong>Makin besar angkanya, makin irit.</strong></p>
+        <span id="sumberPenjelasan" class="lencana-sumber d-none"></span>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="kartu h-100">
                 <h5 class="fw-bold">Makin besar mesin, makin boros</h5>
-                <p class="text-muted small">Setiap titik satu varian mobil (600 contoh acak). Hijau irit, kuning sedang, merah boros.</p>
+                <p class="cara-baca"><i class="bi bi-info-circle me-1"></i>Satu titik adalah satu mobil (600 contoh acak). Makin ke kanan mesinnya makin besar, makin ke atas makin irit. Hijau irit, kuning sedang, merah boros.</p>
                 <div class="area-grafik"><canvas id="gSebaran"></canvas></div>
+                <div class="artinya" data-kunci="sebaran">
+                    <div class="artinya-judul"><i class="bi bi-lightbulb me-1"></i>Artinya</div>
+                    <div class="artinya-isi"><div class="skeleton"></div><div class="skeleton pendek"></div></div>
+                </div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="kartu h-100">
                 <h5 class="fw-bold">{{ judul_silinder }}</h5>
-                <p class="text-muted small">Rata-rata km per liter menurut jumlah silinder.</p>
+                <p class="cara-baca"><i class="bi bi-info-circle me-1"></i>Tinggi batang adalah rata-rata km per liter. Batang yang lebih tinggi berarti lebih irit.</p>
                 <div class="area-grafik"><canvas id="gSilinder"></canvas></div>
+                <div class="artinya" data-kunci="silinder">
+                    <div class="artinya-judul"><i class="bi bi-lightbulb me-1"></i>Artinya</div>
+                    <div class="artinya-isi"><div class="skeleton"></div><div class="skeleton pendek"></div></div>
+                </div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="kartu h-100">
                 <h5 class="fw-bold">{{ judul_tahun }}</h5>
-                <p class="text-muted small">Rata-rata km per liter menurut tahun pembuatan.</p>
+                <p class="cara-baca"><i class="bi bi-info-circle me-1"></i>Garis yang naik berarti mobil rata-rata makin irit dari tahun ke tahun.</p>
                 <div class="area-grafik"><canvas id="gTahun"></canvas></div>
+                <div class="artinya" data-kunci="tahun">
+                    <div class="artinya-judul"><i class="bi bi-lightbulb me-1"></i>Artinya</div>
+                    <div class="artinya-isi"><div class="skeleton"></div><div class="skeleton pendek"></div></div>
+                </div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="kartu h-100">
                 <h5 class="fw-bold">{{ judul_kelas }}</h5>
-                <p class="text-muted small">Rata-rata km per liter menurut jenis mobil.</p>
+                <p class="cara-baca"><i class="bi bi-info-circle me-1"></i>Batang yang lebih panjang berarti jenis mobil itu lebih irit.</p>
                 <div class="area-grafik tinggi"><canvas id="gKelas"></canvas></div>
+                <div class="artinya" data-kunci="kelas">
+                    <div class="artinya-judul"><i class="bi bi-lightbulb me-1"></i>Artinya</div>
+                    <div class="artinya-isi"><div class="skeleton"></div><div class="skeleton pendek"></div></div>
+                </div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="kartu h-100">
                 <h5 class="fw-bold">{{ judul_merek }}</h5>
-                <p class="text-muted small">Nilai tengah km per liter, untuk merek dengan data cukup banyak. Hasilnya dipengaruhi jenis mobil yang dijual tiap merek.</p>
+                <p class="cara-baca"><i class="bi bi-info-circle me-1"></i>Batang yang lebih panjang berarti merek itu rata-rata lebih irit. Hasilnya dipengaruhi jenis mobil yang dijual tiap merek.</p>
                 <div class="area-grafik tinggi"><canvas id="gMerek"></canvas></div>
+                <div class="artinya" data-kunci="merek">
+                    <div class="artinya-judul"><i class="bi bi-lightbulb me-1"></i>Artinya</div>
+                    <div class="artinya-isi"><div class="skeleton"></div><div class="skeleton pendek"></div></div>
+                </div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="kartu h-100">
                 <h5 class="fw-bold">{{ judul_faktor }}</h5>
-                <p class="text-muted small">Seberapa besar tiap hal memengaruhi tebakan model. Ini ukuran pengaruh, bukan bukti sebab-akibat.</p>
+                <p class="cara-baca"><i class="bi bi-info-circle me-1"></i>Batang yang lebih panjang berarti hal itu lebih besar pengaruhnya pada angka km per liter. Ini ukuran pengaruh, bukan bukti sebab-akibat.</p>
                 <div class="area-grafik tinggi"><canvas id="gFaktor"></canvas></div>
+                <div class="artinya" data-kunci="faktor">
+                    <div class="artinya-judul"><i class="bi bi-lightbulb me-1"></i>Artinya</div>
+                    <div class="artinya-isi"><div class="skeleton"></div><div class="skeleton pendek"></div></div>
+                </div>
             </div>
         </div>
     </div>
