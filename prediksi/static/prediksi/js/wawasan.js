@@ -64,12 +64,28 @@ batangMendatar("gFaktor", data.faktor.label, data.faktor.nilai, HIJAU, "Pengaruh
 const wadah = document.getElementById("penjelasan");
 const lencana = document.getElementById("sumberPenjelasan");
 
+// memisahkan kalimat "Saran: ..." supaya tampil sebagai baris tersendiri (textContent: aman dari HTML)
+function isiKotak(elemen, teks) {
+    const posisi = teks.indexOf("Saran:");
+    elemen.textContent = "";
+    elemen.appendChild(document.createTextNode(posisi > 0 ? teks.slice(0, posisi).trim() : teks));
+    if (posisi > 0) {
+        const saran = document.createElement("p");
+        saran.className = "saran";
+        const tebal = document.createElement("strong");
+        tebal.textContent = "Saran: ";
+        saran.appendChild(tebal);
+        saran.appendChild(document.createTextNode(teks.slice(posisi + 6).trim()));
+        elemen.appendChild(saran);
+    }
+}
+
 fetch(wadah.dataset.url)
     .then(r => r.json())
     .then(hasil => {
         document.querySelectorAll(".artinya").forEach(kotak => {
             const teks = hasil.teks[kotak.dataset.kunci];
-            if (teks) kotak.querySelector(".artinya-isi").textContent = teks;   // textContent: aman dari HTML
+            if (teks) isiKotak(kotak.querySelector(".artinya-isi"), teks);
         });
         lencana.textContent = hasil.sumber === "ai" ? "Penjelasan ditulis oleh AI (Llama via Groq)" : "Penjelasan otomatis dari data";
         lencana.classList.remove("d-none");

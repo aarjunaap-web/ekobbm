@@ -1,0 +1,108 @@
+{% extends "prediksi/base.html" %}
+
+{% block judul %}Data{% endblock %}
+
+{% block isi %}
+<section class="judul-halaman">
+    <div class="container">
+        <h1 class="fw-bold mb-1">Data mobil</h1>
+        <p class="mb-0 opacity-75">Cari dan bandingkan angka konsumsi BBM dari data resmi EPA. Biaya BBM dihitung dari harga yang kamu isi.</p>
+    </div>
+</section>
+
+<section class="container isi-halaman">
+    <form method="get" class="kartu mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" for="cari">Cari model</label>
+                <input class="form-control" id="cari" name="cari" value="{{ nilai.cari }}" placeholder="Contoh: Corolla">
+            </div>
+            <div class="col-6 col-md-4">
+                <label class="form-label" for="merek">Merek</label>
+                <select class="form-select" id="merek" name="merek">
+                    <option value="">Semua merek</option>
+                    {% for m in pilih_merek %}<option value="{{ m }}" {% if m == nilai.merek %}selected{% endif %}>{{ m }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-4">
+                <label class="form-label" for="kelas">Jenis mobil</label>
+                <select class="form-select" id="kelas" name="kelas">
+                    <option value="">Semua jenis</option>
+                    {% for k in pilih_kelas %}<option value="{{ k }}" {% if k == nilai.kelas %}selected{% endif %}>{{ k }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="bahan">Bahan bakar</label>
+                <select class="form-select" id="bahan" name="bahan">
+                    <option value="">Semua</option>
+                    {% for b in pilih_bahan %}<option value="{{ b }}" {% if b == nilai.bahan %}selected{% endif %}>{{ b }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="tahun">Tahun</label>
+                <select class="form-select" id="tahun" name="tahun">
+                    <option value="">Semua tahun</option>
+                    {% for t in pilih_tahun %}<option value="{{ t }}" {% if t == nilai.tahun %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="urut">Urutkan</label>
+                <select class="form-select" id="urut" name="urut">
+                    {% for kode, nama in pilih_urut %}<option value="{{ kode }}" {% if kode == nilai.urut %}selected{% endif %}>{{ nama }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="harga_bbm">Harga BBM per liter (Rp)</label>
+                <input class="form-control" type="number" id="harga_bbm" name="harga_bbm" min="1000" max="50000" step="100" value="{{ nilai.harga_bbm }}">
+            </div>
+            <div class="col-12 d-flex gap-2">
+                <button class="btn btn-hijau" type="submit"><i class="bi bi-search me-1"></i>Tampilkan</button>
+                <a class="btn btn-outline-secondary" href="{% url 'data' %}">Atur ulang</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <p class="mb-0"><strong>{{ jumlah }}</strong> mobil ditemukan{% if rata %}, rata-rata <strong>{{ rata }} km per liter</strong>{% endif %}.</p>
+        <span class="text-muted small">Makin besar km per liter, makin irit.</span>
+    </div>
+
+    <div class="kartu p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table tabel-data align-middle mb-0">
+                <thead>
+                    <tr><th>Mobil</th><th>Mesin</th><th>Jenis</th><th class="text-end">km per liter</th><th class="text-end">BBM per 100 km</th></tr>
+                </thead>
+                <tbody>
+                    {% for b in baris %}
+                    <tr>
+                        <td><div class="fw-semibold">{{ b.mobil }}</div><div class="text-muted small">{{ b.tahun }}</div></td>
+                        <td><div>{{ b.mesin }}</div><div class="text-muted small">{{ b.rincian }}</div></td>
+                        <td>{{ b.kelas }}</td>
+                        <td class="text-end text-nowrap"><span class="fw-bold">{{ b.kml }}</span>
+                            <span class="status status-{{ b.status|lower }}">{{ b.status }}</span></td>
+                        <td class="text-end text-nowrap">{{ b.biaya_100 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-5">Tidak ada mobil yang cocok. Coba kurangi pilihan filternya.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if halaman.paginator.num_pages > 1 %}
+    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Halaman">
+        {% if halaman.has_previous %}
+        <a class="btn btn-outline-secondary" href="?{% if querystring %}{{ querystring }}&{% endif %}halaman={{ halaman.previous_page_number }}"><i class="bi bi-chevron-left"></i> Sebelumnya</a>
+        {% else %}<span></span>{% endif %}
+        <span class="text-muted small">Halaman {{ halaman.number }} dari {{ halaman.paginator.num_pages }}</span>
+        {% if halaman.has_next %}
+        <a class="btn btn-outline-secondary" href="?{% if querystring %}{{ querystring }}&{% endif %}halaman={{ halaman.next_page_number }}">Berikutnya <i class="bi bi-chevron-right"></i></a>
+        {% else %}<span></span>{% endif %}
+    </nav>
+    {% endif %}
+
+    <p class="text-muted small mt-4 mb-0">Angka berasal dari uji standar EPA (Amerika Serikat), bukan kondisi jalan di Indonesia. Irit, Sedang, dan Boros dibandingkan dengan seluruh mobil dalam data.</p>
+</section>
+{% endblock %}

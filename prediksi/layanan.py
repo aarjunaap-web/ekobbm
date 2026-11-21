@@ -70,3 +70,16 @@ def angka_resmi(merek, model, tahun, spek):
         return None
     rata = lambda kunci: sum(v[kunci] for v in cocok) / len(cocok)
     return {"kml": rata("kml"), "kota": rata("kml_kota"), "tol": rata("kml_tol")}
+
+@lru_cache(maxsize=1)
+def semua_mobil():
+    """Seluruh varian di katalog sebagai satu daftar datar (dibuat sekali), dipakai halaman Data."""
+    hasil = []
+    for merek, daftar_model_ in muat_katalog().items():
+        for model, daftar_tahun_ in daftar_model_.items():
+            for tahun, varian in daftar_tahun_.items():
+                for v in varian:
+                    baris = dict(zip(POSISI, v))
+                    baris.update(merek=merek, model=model, tahun=int(tahun))
+                    hasil.append(baris)
+    return hasil

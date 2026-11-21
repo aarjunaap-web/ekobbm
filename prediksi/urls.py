@@ -10,4 +10,5 @@ urlpatterns = [
     path("wawasan/", views.wawasan, name="wawasan"),
     path("wawasan/penjelasan/", views.wawasan_penjelasan, name="wawasan_penjelasan"),
     path("tentang/", views.tentang, name="tentang"),
+    path("data/", views.data, name="data"),
 ]

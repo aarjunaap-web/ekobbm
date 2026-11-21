@@ -2,11 +2,12 @@ from bisect import bisect_right
 
 import numpy as np
 import pandas as pd
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render
 
 from .forms import FormHitung
-from .layanan import (angka_resmi, daftar_model, daftar_tahun, daftar_varian, muat_model, muat_ringkasan)
+from .layanan import (angka_resmi, daftar_merek, daftar_model, daftar_tahun, daftar_varian, muat_model, muat_ringkasan, semua_mobil)
 from .penjelas import NAMA_FITUR, _kecil, penjelasan_grafik
 
 def _rupiah(angka):
@@ -163,3 +164,72 @@ def tentang(request):
         "r2_persen": _koma(r["metrik"]["Gradient Boosting"]["r2_uji"] * 100),
     }
     return render(request, "prediksi/tentang.html", konteks)
+
+# ---------- halaman Data ----------
+BAHAN = ["Bensin", "Diesel", "Hybrid"]
+URUTAN = {
+    "irit": ("Paling irit dulu", lambda m: -m["kml"]),
+    "boros": ("Paling boros dulu", lambda m: m["kml"]),
+    "baru": ("Tahun terbaru dulu", lambda m: (-m["tahun"], m["merek"], m["model"])),
+    "nama": ("Nama A-Z", lambda m: (m["merek"], m["model"], -m["tahun"])),
+}
+
+
+def _bahan(m):
+    return "Diesel" if m["diesel"] == "Ya" else "Hybrid" if m["hybrid"] == "Ya" else "Bensin"
+
+
+def data(request):
+    r = muat_ringkasan()
+    pk = r["persentil_kml"]
+    batas_irit, batas_boros = pk[67], pk[33]          # sama dengan warna pada halaman Wawasan
+    g = request.GET
+
+    merek, kelas, bahan = g.get("merek", ""), g.get("kelas", ""), g.get("bahan", "")
+    cari = g.get("cari", "").strip()[:40]
+    urut = g.get("urut", "irit") if g.get("urut") in URUTAN else "irit"
+    try:
+        tahun = int(g.get("tahun", ""))
+    except ValueError:
+        tahun = None
+    try:
+        harga = min(max(int(g.get("harga_bbm", 10000)), 1000), 50000)
+    except ValueError:
+        harga = 10000
+
+    hasil = semua_mobil()
+    if merek:
+        hasil = [m for m in hasil if m["merek"] == merek]
+    if kelas:
+        hasil = [m for m in hasil if m["kelas"] == kelas]
+    if bahan:
+        hasil = [m for m in hasil if _bahan(m) == bahan]
+    if tahun:
+        hasil = [m for m in hasil if m["tahun"] == tahun]
+    if cari:
+        hasil = [m for m in hasil if cari.lower() in m["model"].lower()]
+    hasil = sorted(hasil, key=URUTAN[urut][1])
+
+    halaman = Paginator(hasil, 25).get_page(g.get("halaman"))
+    baris = []
+    for m in halaman:
+        status = "Irit" if m["kml"] >= batas_irit else "Boros" if m["kml"] < batas_boros else "Sedang"
+        mesin = f"{m['mesin_liter']:.1f} L, {m['silinder']} silinder".replace(".", ",")
+        ekstra = [t for t, kunci in (("turbo", "turbo"), ("hybrid", "hybrid"), ("diesel", "diesel")) if m[kunci] == "Ya"]
+        baris.append({
+            "mobil": f"{m['merek']} {m['model']}", "tahun": m["tahun"], "mesin": mesin,
+            "rincian": " · ".join([m["transmisi"], m["penggerak"]] + ekstra), "kelas": m["kelas"],
+            "kml": _koma(m["kml"]), "status": status, "biaya_100": _rupiah(100 / m["kml"] * harga),
+        })
+
+    konteks = {
+        "baris": baris, "halaman": halaman, "jumlah": f"{len(hasil):,}".replace(",", "."),
+        "rata": _koma(sum(m["kml"] for m in hasil) / len(hasil)) if hasil else None,
+        "pilih_merek": daftar_merek(), "pilih_kelas": sorted(r["per_kelas"]["label"]),
+        "pilih_tahun": list(range(r["rentang"]["tahun"][1], r["rentang"]["tahun"][0] - 1, -1)),
+        "pilih_bahan": BAHAN, "pilih_urut": [(k, v[0]) for k, v in URUTAN.items()],
+        "nilai": {"merek": merek, "kelas": kelas, "bahan": bahan, "tahun": tahun, "cari": cari, "urut": urut, "harga_bbm": harga},
+        "querystring": "&".join(f"{k}={v}" for k, v in g.items() if k != "halaman" and v and k in (
+            "merek", "kelas", "bahan", "tahun", "cari", "urut", "harga_bbm")),
+    }
+    return render(request, "prediksi/data.html", konteks)
