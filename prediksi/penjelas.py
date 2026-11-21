@@ -64,17 +64,24 @@ def penjelasan_otomatis():
     f = _fakta()
     return {
         "sebaran": f"Mobil bermesin di bawah 2 liter rata-rata menempuh {_koma(f['mesin_kecil'])} km per liter, "
-                   f"sedangkan yang bermesin 4 liter ke atas hanya {_koma(f['mesin_besar'])} km per liter.",
+                   f"sedangkan yang bermesin 4 liter ke atas hanya {_koma(f['mesin_besar'])} km per liter. "
+                   "Saran: bila BBM jadi pertimbangan utama, pilih mesin di bawah 2 liter.",
         "silinder": f"Mobil 4 silinder rata-rata {_koma(f['silinder_4'])} km per liter, sedangkan 8 silinder hanya "
-                    f"{_koma(f['silinder_8'])}. Makin banyak silinder, makin boros.",
+                    f"{_koma(f['silinder_8'])}. Makin banyak silinder, makin boros. "
+                    "Saran: untuk BBM yang hemat, pilih mobil 4 silinder atau kurang.",
         "tahun": f"Dari {f['tahun_awal']} sampai {f['tahun_akhir']}, rata-rata mobil makin irit: "
-                 f"dari {_koma(f['kml_awal'])} menjadi {_koma(f['kml_akhir'])} km per liter.",
+                 f"dari {_koma(f['kml_awal'])} menjadi {_koma(f['kml_akhir'])} km per liter. "
+                 "Saran: bila ingin irit, pilih mobil keluaran yang lebih baru.",
         "kelas": f"Jenis {_kecil(f['kelas_irit'])} paling irit ({_koma(f['kelas_irit_kml'])} km per liter), "
-                 f"sedangkan {_kecil(f['kelas_boros'])} paling boros ({_koma(f['kelas_boros_kml'])} km per liter).",
+                 f"sedangkan {_kecil(f['kelas_boros'])} paling boros ({_koma(f['kelas_boros_kml'])} km per liter). "
+                 "Saran: pilih jenis mobil sesuai kebutuhan, tetapi siapkan biaya BBM lebih besar untuk jenis yang boros.",
         "merek": f"{f['merek_irit']} rata-rata paling irit ({_koma(f['merek_irit_kml'])} km per liter) dan "
-                 f"{f['merek_boros']} paling boros ({_koma(f['merek_boros_kml'])}). Hasil ini ikut dipengaruhi jenis mobil yang dijual tiap merek.",
+                 f"{f['merek_boros']} paling boros ({_koma(f['merek_boros_kml'])}). "
+                 "Hasil ini ikut dipengaruhi jenis mobil yang dijual tiap merek. "
+                 "Saran: jangan memilih hanya dari merek; bandingkan juga jenis dan ukuran mesinnya.",
         "faktor": f"Ukuran mesin paling menentukan ({f['penting'][0][1]}%), disusul {f['penting'][1][0]} ({f['penting'][1][1]}%) "
-                  f"dan {f['penting'][2][0]} ({f['penting'][2][1]}%).",
+                  f"dan {f['penting'][2][0]} ({f['penting'][2][1]}%). "
+                  "Saran: saat membandingkan mobil, lihat ukuran mesinnya lebih dulu.",
     }
 
 
@@ -94,8 +101,9 @@ def _prompt():
         "Satuan: km per liter (km/L); angka LEBIH BESAR berarti LEBIH IRIT, angka lebih kecil berarti lebih boros. "
         "Jangan memakai kata 'konsumsi lebih rendah' atau 'konsumsi lebih tinggi'; pakai kata 'irit' dan 'boros' saja. "
         "Gunakan HANYA angka pada data di bawah dan jangan menambah angka lain. "
-        "Untuk tiap grafik tulis 1 sampai 2 kalimat bahasa Indonesia yang sederhana tanpa istilah teknis: apa temuannya, "
-        "lalu apa artinya bagi orang yang memilih mobil. "
+        "Untuk tiap grafik tulis 2 sampai 3 kalimat bahasa Indonesia yang sederhana tanpa istilah teknis: apa temuannya dan apa artinya "
+        "bagi orang yang memilih mobil. Kalimat terakhir adalah satu saran praktis singkat yang diawali tepat dengan 'Saran:' "
+        "dan hanya berdasar data di bawah. "
         "Jawab HANYA dengan satu objek JSON dengan tepat enam kunci: sebaran, silinder, tahun, kelas, merek, faktor. "
         "Nilainya teks biasa tanpa format markdown.\n\nDATA:\n" + data
     )
@@ -153,7 +161,7 @@ def penjelasan_grafik():
     """Mengembalikan (sumber, dict). sumber = 'ai' bila dari Groq, 'otomatis' bila memakai penjelasan cadangan."""
     if "hasil" in _cache:
         return "ai", _cache["hasil"]
-    jawaban = _tanya(_prompt(), 900)
+    jawaban = _tanya(_prompt(), 1400)
     hasil = _baca_json(jawaban) if jawaban else None
     if hasil:
         _cache["hasil"] = hasil
