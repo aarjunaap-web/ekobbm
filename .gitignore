@@ -8,3 +8,4 @@ venv/
 .vscode/
 staticfiles/
 .vercel
+data/vehicles.csv

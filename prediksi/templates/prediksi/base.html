@@ -24,8 +24,8 @@
             <div class="collapse navbar-collapse" id="menuUtama">
                 <ul class="navbar-nav ms-auto gap-lg-2">
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'beranda' %}active{% endif %}" href="{% url 'beranda' %}">Beranda</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'prediksi' %}active{% endif %}" href="{% url 'prediksi' %}">Prediksi</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'grafik' %}active{% endif %}" href="{% url 'grafik' %}">Grafik</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'hitung' %}active{% endif %}" href="{% url 'hitung' %}">Hitung</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'wawasan' %}active{% endif %}" href="{% url 'wawasan' %}">Wawasan</a></li>
                 </ul>
             </div>
         </div>
@@ -37,8 +37,8 @@
 
     <footer class="footer-eko py-4 mt-5">
         <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
-            <span>EkoBBM &middot; Proyek Sistem Cerdas, Politeknik Negeri Madiun</span>
-            <span>Arjuna Anggara Putra &middot; NIM 253307052</span>
+            <span>EkoBBM &middot; Data konsumsi BBM: EPA dan DOE Amerika Serikat (fueleconomy.gov)</span>
+            <span>Proyek Sistem Cerdas &middot; Arjuna Anggara Putra &middot; NIM 253307052</span>
         </div>
     </footer>
 

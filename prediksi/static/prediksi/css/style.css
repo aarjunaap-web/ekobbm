@@ -113,3 +113,27 @@ body {
 
 .penjelasan ul { padding-left: 1.2rem; margin: 0; }
 .penjelasan li { margin-bottom: .6rem; line-height: 1.6; color: #1f2937; }
+
+
+/* ---------- desain ulang: beranda dan halaman hitung ---------- */
+.baris-peringkat { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px solid rgba(255, 255, 255, .15); }
+.baris-peringkat:last-child { border-bottom: 0; }
+.angka-stat { font-size: 2rem; font-weight: 800; color: var(--hijau-tua); }
+.ikon-bulat { width: 3rem; height: 3rem; border-radius: 50%; background: var(--hijau-muda); color: var(--hijau); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1rem; }
+
+.nomor { display: inline-flex; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--hijau); color: #fff; font-size: .95rem; align-items: center; justify-content: center; margin-right: .6rem; }
+.kolom-hasil { position: sticky; top: 5.5rem; }
+
+.skala { position: relative; height: .9rem; border-radius: 1rem; background: linear-gradient(90deg, #dc2626 0%, #f59e0b 50%, #16a34a 100%); margin: .75rem 0 .35rem; }
+.penanda { position: absolute; top: 50%; width: 1.3rem; height: 1.3rem; background: #fff; border: 4px solid var(--hijau-tua); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
+
+
+/* ---------- halaman wawasan ---------- */
+.area-grafik { position: relative; height: 300px; }
+.area-grafik.tinggi { height: 380px; }
+.penjelasan ul { padding-left: 1.2rem; margin: 0; }
+.penjelasan li { margin-bottom: .6rem; line-height: 1.6; color: #1f2937; }
+.lencana-sumber { background: var(--hijau-muda); color: var(--hijau-tua); font-size: .8rem; font-weight: 600; padding: .3rem .75rem; border-radius: 2rem; }
+.skeleton { height: 1rem; border-radius: .5rem; margin-bottom: .8rem; background: linear-gradient(90deg, #e5eceb 25%, #f3f6f6 50%, #e5eceb 75%); background-size: 200% 100%; animation: kilau 1.2s infinite; }
+.skeleton.pendek { width: 60%; }
+@keyframes kilau { from { background-position: 200% 0; } to { background-position: -200% 0; } }
