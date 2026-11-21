@@ -1,0 +1,98 @@
+{% extends "prediksi/base.html" %}
+
+{% block judul %}Tentang{% endblock %}
+
+{% block isi %}
+<section class="judul-halaman">
+    <div class="container">
+        <h1 class="fw-bold mb-1">Tentang EkoBBM</h1>
+        <p class="mb-0 opacity-75">Dari mana angkanya berasal, bagaimana hasilnya dihitung, dan apa batasannya.</p>
+    </div>
+</section>
+
+<section class="container isi-halaman">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="kartu mb-4">
+                <h4 class="fw-bold"><i class="bi bi-bullseye me-2 text-success"></i>Untuk apa website ini?</h4>
+                <p class="mb-0">EkoBBM membantu membandingkan seberapa irit sebuah mobil dan berapa biaya BBM-nya. Pilih merek, model, dan tahun, lalu website memperkirakan konsumsi dalam kilometer per liter (km/L), membandingkannya dengan ribuan mobil lain, dan menghitung biaya bulanan dari jarak yang kamu tempuh.</p>
+            </div>
+
+            <div class="kartu mb-4">
+                <h4 class="fw-bold"><i class="bi bi-database me-2 text-success"></i>Sumber data</h4>
+                <p>Data konsumsi bahan bakar berasal dari <strong>EPA</strong> (badan lingkungan Amerika Serikat) dan <strong>DOE</strong> (departemen energi), yang dipublikasikan di <a href="https://fueleconomy.gov/feg/download.shtml" target="_blank" rel="noopener">fueleconomy.gov</a>. Ini hasil uji standar di laboratorium, bukan laporan pemilik mobil.</p>
+                <p class="mb-2">Data mentahnya memuat lebih dari 50 ribu kendaraan. Sebelum dipakai, data dirapikan:</p>
+                <ul class="mb-0">
+                    <li>Hanya mobil berbahan bakar bensin, diesel, dan hybrid biasa. Mobil listrik, plug-in hybrid, dan gas dibuang karena tidak punya angka km per liter.</li>
+                    <li>Hanya tahun {{ tahun_awal }} ke atas, dan merek dengan data yang cukup banyak.</li>
+                    <li>Data ganda dibuang. Hasil akhirnya <strong>{{ jumlah_data }} varian mobil</strong> dari {{ jumlah_merek }} merek ({{ jumlah_model }} model), tahun {{ tahun_awal }} sampai {{ tahun_akhir }}.</li>
+                    <li>Satuan mil per galon diubah menjadi kilometer per liter.</li>
+                </ul>
+            </div>
+
+            <div class="kartu mb-4">
+                <h4 class="fw-bold"><i class="bi bi-cpu me-2 text-success"></i>Cara hasil dihitung</h4>
+                <p>Hasil di halaman Hitung dibuat oleh model <em>machine learning</em> bernama <strong>Gradient Boosting</strong>. Model ini belajar dari data di atas: dari spesifikasi mobil (merek, model, tahun, ukuran mesin, jumlah silinder, transmisi, penggerak roda, turbo, hybrid, diesel, dan jenis mobil) ia belajar menebak km/L.</p>
+                <p>Agar adil, 80% data dipakai untuk belajar dan 20% disimpan untuk menguji. Model juga dibandingkan dengan metode yang lebih sederhana (regresi linear):</p>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-2">
+                        <thead>
+                            <tr><th>Model</th><th class="text-end">Kecocokan (R²)</th><th class="text-end">Rata-rata meleset</th><th class="text-end">80% tebakan meleset kurang dari</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for m in metrik %}
+                            <tr {% if m.terpakai %}class="table-success"{% endif %}>
+                                <td>{{ m.nama }}{% if m.terpakai %} <span class="badge text-bg-success">dipakai</span>{% endif %}</td>
+                                <td class="text-end">{{ m.r2 }}</td>
+                                <td class="text-end">{{ m.mae }} km/L ({{ m.mape }}%)</td>
+                                <td class="text-end">{{ m.persen_80 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-muted mb-0">Kecocokan (R²) bernilai 0 sampai 1; makin dekat ke 1 makin baik. Nilai {{ r2_persen }}% artinya model menjelaskan hampir seluruh perbedaan konsumsi antarmobil dalam data uji.</p>
+            </div>
+
+            <div class="kartu mb-4">
+                <h4 class="fw-bold"><i class="bi bi-eye me-2 text-success"></i>Cara membaca hasil</h4>
+                <ul class="mb-0">
+                    <li><strong>km/L:</strong> berapa kilometer yang ditempuh dengan 1 liter bensin. Makin besar makin irit.</li>
+                    <li><strong>Irit, Sedang, Boros:</strong> mobil dibandingkan dengan seluruh mobil dalam data, lalu dibagi tiga kelompok sama besar.</li>
+                    <li><strong>Lebih irit dari X%:</strong> kedudukan mobil di antara semua mobil dalam data.</li>
+                    <li><strong>Kisaran wajar:</strong> tebakan model bisa meleset sedikit. Kisaran menunjukkan batas yang dilampaui hanya oleh 20% tebakan.</li>
+                    <li><strong>Angka resmi EPA:</strong> bila spesifikasinya sama persis dengan data, ditampilkan sebagai pembanding.</li>
+                </ul>
+            </div>
+
+            <div class="kartu">
+                <h4 class="fw-bold"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Batasan</h4>
+                <ul class="mb-0">
+                    <li>Data berasal dari mobil yang dijual di <strong>Amerika Serikat</strong>. Banyak mobil khas Indonesia, seperti Avanza, Brio, dan Innova, tidak ada di dalamnya.</li>
+                    <li>Angkanya hasil <strong>uji standar</strong>. Kemacetan, gaya mengemudi, kondisi mesin, dan kualitas BBM membuat konsumsi nyata di jalan berbeda.</li>
+                    <li>Mengubah spesifikasi (misalnya mesin yang lebih besar) menghasilkan <strong>simulasi</strong>, bukan angka hasil uji.</li>
+                    <li>Ringkasan di halaman Wawasan ditulis oleh model bahasa (AI) dari angka yang sama dengan grafik. AI bisa keliru menyusun kalimat, jadi grafik tetap menjadi acuan utama.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="kolom-hasil">
+                <div class="kartu">
+                    <h5 class="fw-bold">Teknologi</h5>
+                    <ul class="list-unstyled mb-3">
+                        <li class="mb-2"><i class="bi bi-filetype-py me-2 text-success"></i>Python, pandas, scikit-learn</li>
+                        <li class="mb-2"><i class="bi bi-server me-2 text-success"></i>Django</li>
+                        <li class="mb-2"><i class="bi bi-bar-chart-line me-2 text-success"></i>Chart.js dan Bootstrap</li>
+                        <li class="mb-2"><i class="bi bi-stars me-2 text-success"></i>Llama lewat Groq (ringkasan)</li>
+                        <li><i class="bi bi-cloud me-2 text-success"></i>Vercel</li>
+                    </ul>
+                    <hr>
+                    <h5 class="fw-bold">Pembuat</h5>
+                    <p class="mb-0">Arjuna Anggara Putra<br><span class="text-muted">NIM 253307052</span><br><span class="text-muted">Proyek mata kuliah Sistem Cerdas, Politeknik Negeri Madiun</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

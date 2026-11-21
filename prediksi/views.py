@@ -145,3 +145,21 @@ def wawasan_penjelasan(request):
     """Dipanggil JavaScript saat halaman Wawasan dibuka; mengembalikan ringkasan sebagai JSON."""
     sumber, teks = penjelasan_wawasan()
     return JsonResponse({"sumber": sumber, "teks": teks})
+
+# ---------- halaman Tentang ----------
+def tentang(request):
+    r = muat_ringkasan()
+    nama = {"Regresi Linear (Ridge)": "Regresi linear (Ridge)", "Gradient Boosting": "Gradient Boosting"}
+    metrik = [{
+        "nama": nama[k], "terpakai": k == "Gradient Boosting",
+        "r2": _koma(m["r2_uji"], 3), "mae": _koma(m["mae_kml"], 2),
+        "mape": _koma(m["mape"]), "persen_80": _koma(m["persen_80"]),
+    } for k, m in r["metrik"].items()]
+    konteks = {
+        "metrik": metrik,
+        "jumlah_data": f"{r['jumlah_data']:,}".replace(",", "."),
+        "jumlah_merek": r["jumlah_merek"], "jumlah_model": r["jumlah_model"],
+        "tahun_awal": r["rentang"]["tahun"][0], "tahun_akhir": r["rentang"]["tahun"][1],
+        "r2_persen": _koma(r["metrik"]["Gradient Boosting"]["r2_uji"] * 100),
+    }
+    return render(request, "prediksi/tentang.html", konteks)
