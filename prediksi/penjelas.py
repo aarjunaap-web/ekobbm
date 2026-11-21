@@ -70,11 +70,14 @@ def _prompt():
     )
     return (
         "Kamu menjelaskan grafik pada website cek konsumsi BBM mobil kepada pengunjung awam. "
+        "Satuan yang dipakai adalah km per liter (km/L): angka LEBIH BESAR berarti LEBIH IRIT, angka lebih kecil berarti lebih boros. "
+        "Jangan memakai kata 'konsumsi lebih rendah' atau 'konsumsi lebih tinggi'; pakai kata 'irit' dan 'boros' saja. "
         "Gunakan HANYA angka pada data di bawah dan jangan menambah angka lain. "
         "Tulis dalam bahasa Indonesia yang sederhana tanpa istilah teknis, tepat 4 poin, tiap poin satu atau dua kalimat, "
         "diawali tanda '- ' dan tanpa format markdown lain. "
-        "Poin: (1) hubungan ukuran mesin/jumlah silinder dengan konsumsi, (2) perbandingan 4 dan 8 silinder, "
-        "(3) tren dari tahun ke tahun, (4) jenis mobil paling irit dan boros, ditutup satu kalimat bahwa faktor-faktor ini saling berkaitan "
+        "Poin: (1) mesin yang lebih besar dan silinder yang lebih banyak membuat mobil LEBIH BOROS (km/L lebih kecil), "
+        "(2) perbandingan 4 dan 8 silinder, (3) tren dari tahun ke tahun, "
+        "(4) jenis mobil paling irit dan paling boros, ditutup satu kalimat bahwa faktor-faktor ini saling berkaitan "
         "dan data berasal dari uji EPA di Amerika Serikat.\n\nDATA:\n" + data
     )
 
@@ -108,7 +111,7 @@ def penjelasan_wawasan():
         return "otomatis", ringkasan_otomatis()
 
     for model in daftar[:4]:
-        isi = json.dumps({"model": model, "messages": [{"role": "user", "content": _prompt()}], "temperature": 0.3}).encode("utf-8")
+        isi = json.dumps({"model": model, "messages": [{"role": "user", "content": _prompt()}], "temperature": 0.2}).encode("utf-8")
         permintaan = urllib.request.Request(URL, data=isi, method="POST", headers=_header(kunci))
         try:
             with urllib.request.urlopen(permintaan, timeout=30) as jawaban:
